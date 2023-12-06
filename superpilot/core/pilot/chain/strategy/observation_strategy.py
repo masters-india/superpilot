@@ -37,7 +37,7 @@ class Task(SchemaModel):
     objective: str = Field(..., description="An imperative verb phrase that succinctly describes the task.")
     type: TaskType = Field(
         default=TaskType.RESEARCH,
-        description="A categorization for the task.")
+        description="A categorization for the task from [research, write, edit, code, design, test, plan].")
     priority: int = Field(..., description="A number between 1 and 10 indicating the priority of the task "
                                            "relative to other generated tasks.")
     ready_criteria: List[str] = Field(..., description="A list of measurable and testable criteria that must "
@@ -47,7 +47,7 @@ class Task(SchemaModel):
                                                             "must be met before the task can be started.")
     status: TaskStatus = Field(
         default=TaskStatus.BACKLOG,
-        description = "The current status of the task.")
+        description="The current status of the task from [backlog, in_progress, complete, on_hold].")
     pilot_name: str = Field(..., description="Name of the pilot most suited for this task")
 
 
@@ -56,7 +56,8 @@ class Observation(SchemaModel):
     Class representing the data structure for observation for pilot objective, whether it is complete or not.
     If not complete, then the pilot name, motivation, self_criticism and reasoning for choosing the pilot.
     """
-    goal_status: ObservationStatus = Field(..., description="Status of the objective asked by the user")
+    goal_status: ObservationStatus = Field(..., description="Status of the objective asked by the user from "
+                                                            "[not_started, incomplete, complete, on_hold]")
     motivation: str = Field(..., description="Your justification for choosing this pilot instead of a different one.")
     self_criticism: str = Field(..., description="Thoughtful self-criticism that explains why this pilot may not be "
                                                  "the best choice.")
@@ -94,7 +95,7 @@ class ObserverPrompt(SimplePrompt, ABC):
           'reasoning': "Despite the limitation, the 'calculator' pilot can still handle the arithmetic operations which makes up the majority of the task",
           'tasks': [
               'objective': 'multiply 2 and 3 and then sum with 6 and then subtract 2 and then divide by 2',
-              'type': 'Arithmetic',
+              'type': 'code',
               'priority': 1,
               'ready_criteria': [
                 'Inputs are valid'
@@ -102,11 +103,11 @@ class ObserverPrompt(SimplePrompt, ABC):
               'acceptance_criteria': [
                 'Return correct computation result'
               ],
-              'status': 'not_started',
+              'status': 'backlog',
               'pilot_name': 'calculator'
             ,
               'objective': 'Plot the graph',
-              'type': 'Plot',
+              'type': 'code',
               'priority': 5,
               'ready_criteria': [
                 'Division result is available'
@@ -114,7 +115,7 @@ class ObserverPrompt(SimplePrompt, ABC):
               'acceptance_criteria': [
                 'Return correct plot'
               ],
-              'status': 'not_started',
+              'status': 'backlog',
               'pilot_name': ''
           ]
         
