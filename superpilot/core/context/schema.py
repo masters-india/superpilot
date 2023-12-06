@@ -253,5 +253,7 @@ class Context:
             f.write(str(self.format_numbered()))
 
     @classmethod
-    def factory(cls, items: list[ContentItem] = []):
+    def factory(cls, items: list[ContentItem] = None):
+        if items is None:
+            items = []
         return cls(items)
