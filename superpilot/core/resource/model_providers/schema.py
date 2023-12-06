@@ -418,6 +418,40 @@ class SchemaModel(BaseModel):
         parameters["required"] = sorted(parameters.get("properties", {}))
         # parameters["definitions"] = definitions
         _remove_a_key(parameters, "title")
+        _remove_a_key(parameters, "allOf")
+        # _remove_a_key(parameters, "items")
+        # _remove_a_key(parameters, "$ref")
+
+        properties = parameters["properties"]
+        parameters.pop("definitions", None)
+
+        updated_properties = {}
+
+        for key, property in properties.items():
+            property_type = property.get('schema_type')
+            if property_type == 'object_array':
+                schema_class = property.get('schema_class')
+                class_schema = schema_class.function_schema(arguments_format=True)
+                class_schema.update({'description': 'list item'})
+                new_property = {
+                    'type': 'array',
+                    'description': property.get('description'),
+                    'items': class_schema
+                }
+                updated_properties[key] = new_property
+            elif property_type == 'object':
+                schema_class = property.get('schema_class')
+                new_property = {
+                    'type': 'object',
+                    'description': property.get('description'),
+                    'properties': schema_class.function_schema(arguments_format=True)
+                }
+                updated_properties[key] = new_property
+            else:
+                updated_properties[key]  = property
+
+        parameters["properties"] = updated_properties
+        # TODO add required in parameters
         if arguments_format:
             name = schema["title"]
             # parameters.pop("required", None)

@@ -29,6 +29,10 @@ class ObservationStatus(str, enum.Enum):
     COMPLETE: str = "complete"
     ON_HOLD: str = "on_hold"
 
+    @classmethod
+    def list(cls):
+        return [status.value for status in cls]
+
 
 class Task(SchemaModel):
     """
@@ -50,6 +54,10 @@ class Task(SchemaModel):
         description="The current status of the task from [backlog, in_progress, complete, on_hold].")
     pilot_name: str = Field(..., description="Name of the pilot most suited for this task")
 
+    @classmethod
+    def multiple_args(cls) -> bool:
+        return True
+
 
 class Observation(SchemaModel):
     """
@@ -65,7 +73,8 @@ class Observation(SchemaModel):
                                             "`motivation` and weighing the `self_criticism`.")
 
     tasks: List[Task] = Field(
-        ..., description="List of tasks to be accomplished by the each pilot"
+        ..., description="List of tasks to be accomplished by the each pilot",
+        schema_type='object_array', schema_class=Task
     )
 
 
