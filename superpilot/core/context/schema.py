@@ -121,8 +121,8 @@ class FolderContentItem(ContentItem):
 
 @dataclass
 class ObjectContent(ContentItem):
-    content: Union[List, Dict]
-    source: Optional[str] = None
+    content_dict: Union[List, Dict]
+    source_str: Optional[str] = None
     type = ContentType.CLASS_OBJECT
 
     @property
@@ -131,19 +131,19 @@ class ObjectContent(ContentItem):
 
     @property
     def source(self) -> str:
-        return f"'{self.source}'"
+        return f"'{self.source_str}'"
 
     @property
     def content(self) -> str:
-        return str(self.content)
+        return str(self.content_dict)
 
     @staticmethod
     def add(
-            content: dict | list,
-            source: str = None
+            content_dict: dict | list,
+            source_str: str = None
     ):
-        knowledge = ObjectContent(content, source)
-        knowledge.content_type = isinstance(content, dict) and ContentType.DICT or ContentType.LIST
+        knowledge = ObjectContent(content_dict, source_str)
+        knowledge.content_type = isinstance(content_dict, dict) and ContentType.DICT or ContentType.LIST
         return knowledge
 
 
@@ -224,8 +224,6 @@ class Context:
             self.items.append(Content.add_content_item(item, ContentType.TEXT))
         else:
             self.items.append(ObjectContent.add(item))
-
-        self.items.append(item)
 
     def add_content(self, content: str) -> None:
         item = Content.add_content_item(content, ContentType.TEXT)
