@@ -58,12 +58,20 @@ class TaskType(str, enum.Enum):
     TEST: str = "test"
     PLAN: str = "plan"
 
+    @classmethod
+    def list(cls):
+        return [status.value for status in cls]
+
 
 class TaskStatus(str, enum.Enum):
     BACKLOG: str = "backlog"
     READY: str = "ready"
     IN_PROGRESS: str = "in_progress"
     DONE: str = "done"
+
+    @classmethod
+    def list(cls):
+        return [status.value for status in cls]
 
 
 class TaskContext(BaseModel):

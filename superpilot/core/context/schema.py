@@ -127,7 +127,7 @@ class ObjectContent(ContentItem):
 
     @property
     def description(self) -> str:
-        return f"The is object of '{self.source}'"
+        return f"The is an object of '{self.source_str}'"
 
     @property
     def source(self) -> str:
@@ -145,6 +145,7 @@ class ObjectContent(ContentItem):
         knowledge = ObjectContent(content_dict, source_str)
         knowledge.content_type = isinstance(content_dict, dict) and ContentType.DICT or ContentType.LIST
         return knowledge
+
 
 
 class Content(ContentItem):
