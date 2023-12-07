@@ -46,6 +46,13 @@ class NextAbility(PromptStrategy):
         "Please choose one of the provided functions to accomplish this task. "
         "Some tasks may require multiple functions to accomplish. If that is the case, choose the function that "
         "you think is most appropriate for the current situation given your progress so far."
+        
+        "ask the user relevant question only if all the conditions are met.conditions are:"
+        "1. You are not currently solving the same `objective`"
+        "2. the information is not already available "
+        "3. you are blocked to proceed without user assistance"
+        "4. you can not solve it by yourself or function call. "
+        "if there is no question to ask then set question to empty string"
     )
 
     DEFAULT_ADDITIONAL_ABILITY_ARGUMENTS = {
