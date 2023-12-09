@@ -48,11 +48,12 @@ class SuperChain(BaseChain):
     async def handle_task_based_on_observation(self, observation: Observation, context: Context, **kwargs):
         # Logic to choose the right function and its arguments based on the observation
         if observation.goal_status != ObservationStatus.COMPLETE:
-            for pilot_name, task_in_hand in observation.tasks:
+            response = "Task is already completed"
+            for task_in_hand in observation.tasks:
                 if task_in_hand.status != TaskStatus.DONE:
-                    handler, transformer = self.current_handler(pilot_name)
-                    return await self.execute_handler(task_in_hand.objective, context, handler, transformer, **kwargs)
-            return "Task is already completed", context
+                    handler, transformer = self.current_handler(task_in_hand.pilot_name)
+                    response, context =  await self.execute_handler(task_in_hand.objective, context, handler, transformer, **kwargs)
+            return response, context
         else:
             return "Task is already completed", context
 
