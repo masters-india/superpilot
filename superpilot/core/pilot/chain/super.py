@@ -8,8 +8,9 @@ from superpilot.core.ability import AbilityAction
 from superpilot.core.context.schema import Context
 from superpilot.core.pilot.chain.strategy.observation_strategy import Observation
 from superpilot.core.planning import TaskStatus, Task, LanguageModelResponse
-from superpilot.core.state.base import BaseState
+from superpilot.core.state.base import BaseState, State
 from superpilot.core.state.mixins import DictStateMixin, PickleStateMixin
+from superpilot.core.state.pickle import PickleState
 
 
 class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
@@ -41,6 +42,8 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         self.thread_id = thread_id
 
         # load the values from state
+        if state is None:
+            state = State()
         self._state = state
 
     async def execute(self, objective: str, context: Context, **kwargs):
@@ -52,9 +55,12 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
         kwargs['current_chain'] = self
         self._interaction = False
         if not self._current_observation:
+            await self._callback.on_observation_start(**kwargs)
             observation = await self.observe(objective, self._context)
             if not observation:
                 return "Either observation or observer is not defined, please set observer in the chain.", self._context
+            print("kwargs in chain", kwargs)
+            await self._callback.on_observation(observation, **kwargs)
             self._current_observation = observation
             self._task_queue = observation.tasks
             self._pilot_state = {}
@@ -85,7 +91,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                         self.logger.error(f"Handler named '{task_in_hand.function_name}' is not defined")
                         continue
                     # TODO: there should be Pilot Task where we store the pilot Action?
-                    response, context = await self.execute_handler(task_in_hand.objective, context, handler, transformer, **kwargs)
+                    response, context = await self.execute_handler(task_in_hand.get_task(), context, handler, transformer, **kwargs)
             if response:
                 # TODO: this task is different from the one in superpilot
                 self._current_task.status = TaskStatus.DONE
@@ -111,7 +117,7 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
                 # TODO: there should be Pilot Task where we store the pilot Action?
                 print("Pilot state: ", self._pilot_state)
                 await self._state.deserialize(handler, self._pilot_state)
-                self._response, self._context = await self.execute_handler(self._current_task.objective, self._context, handler, transformer, user_input=objective, **kwargs)
+                self._response, self._context = await self.execute_handler(self._current_task.get_task(), self._context, handler, transformer, user_input=objective, **kwargs)
                 # TODO: Make it interaction based?
                 if self._pilot_state.get('_status', TaskStatus.DONE) == TaskStatus.DONE:
                     self._pilot_state = {}
@@ -157,11 +163,11 @@ class SuperChain(BaseChain, DictStateMixin, PickleStateMixin):
             self.logger.error(f"Error in handler {handler.name()}: {e} {traceback.print_exc()}")
         return response, context
 
-    async def observe(self, task, context) -> Observation:
+    async def observe(self, objective, context) -> Observation:
         observer = self.current_observer()
         if observer:
             try:
-                response = await observer.execute(task, context, pilots=self.dump_pilots())
+                response = await observer.execute(objective, context, pilots=self.dump_pilots())
                 # TODO : send the consumtion metrics to service
                 print("response", response)
                 return Observation(**response.get_content())
