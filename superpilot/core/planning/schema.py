@@ -57,6 +57,7 @@ class TaskType(str, enum.Enum):
     DESIGN: str = "design"
     TEST: str = "test"
     PLAN: str = "plan"
+    default: str = "default"
 
 
 class TaskStatus(str, enum.Enum):
@@ -86,7 +87,7 @@ class Task(BaseModel):
     ready_criteria: List[str]
     acceptance_criteria: List[str]
     context: TaskContext = Field(default_factory=TaskContext)
-    sub_tasks: List["Task"] = Field(default_factory=list)
+    sub_tasks: List[List["Task"]] = Field(default_factory=list)
     active_task_idx: int = 0
     status: TaskStatus = TaskStatus.BACKLOG
 
@@ -154,9 +155,17 @@ class Task(BaseModel):
             self.context = TaskContext()
         return True
 
+    def add_plan(self, plan: List["Task"]):
+        self.sub_tasks.append(plan)
+        self.active_task_idx = 0
+
+    @property
+    def plan(self):
+        return self.sub_tasks[-1] if self.sub_tasks else None
+
     @property
     def current_sub_task(self) -> "Task":
-        return self.sub_tasks[self.active_task_idx]
+        return self.plan[self.active_task_idx] if self.plan else None
 
 
 # Need to resolve the circular dependency between Task and TaskContext once both models are defined.
@@ -168,8 +177,8 @@ class TaskSchema(SchemaModel):
     Class representing the data structure for task for pilot objective, whether it is complete or not.
     """
     objective: str = Field(..., description="An verbose description of what exactly the task is.")
-    type: TaskType = Field(
-        default=TaskType.RESEARCH,
+    type: str = Field(
+        # default=TaskType.RESEARCH,
         description="A categorization for the task from [research, write, edit, code, design, test, plan].")
     priority: int = Field(..., description="A number between 1 and 10 indicating the priority of the task "
                                            "relative to other generated tasks.")
